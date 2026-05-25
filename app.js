@@ -3,6 +3,7 @@ const LS='dbh26_v4_sumut';
 let state=[];
 let provFilter='';
 let yrFilter=0;
+let _localSave=false;
 
 const clone=x=>JSON.parse(JSON.stringify(x));
 const parseRp=v=>{if(!v&&v!==0)return 0;if(typeof v==='number')return Math.round(v);return parseInt(String(v).replace(/[^0-9]/g,''))||0;};
@@ -15,31 +16,53 @@ function getY26(r){return r.years.find(y=>y.yr===2026)||r.years[r.years.length-1
 function calcTotal(r){return r.murni?getY26(r).val:r.years.reduce((s,y)=>s+y.val,0);}
 function calcJalan(r){return r.g>0?Math.round(calcTotal(r)*r.g/100):0;}
 
+function migrate(arr){arr.forEach(r=>{if(!r.provinsi)r.provinsi='Sumatera Utara';if(!r.dok)r.dok=[0,0,0,0,0,0];if(!r.years)r.years=[];});}
+
 async function loadState(){
-  try{
-    const snap=await DOC_REF.get();
-    if(snap.exists){
-      state=snap.data().state;
-      // migrate: add provinsi if missing
-      state.forEach(r=>{if(!r.provinsi)r.provinsi='Sumatera Utara';});
-      localStorage.setItem(LS,JSON.stringify(state));
-      return;
+  // Load from localStorage immediately for fast first render
+  try{const s=localStorage.getItem(LS);state=s?JSON.parse(s):clone(MASTER);}
+  catch(e){state=clone(MASTER);}
+  migrate(state);
+
+  // Set up real-time Firestore listener
+  await new Promise(resolve=>{
+    let resolved=false;
+    try{
+      DOC_REF.onSnapshot(snap=>{
+        if(!resolved){
+          resolved=true;
+          if(snap.exists){
+            state=snap.data().state;
+            migrate(state);
+            localStorage.setItem(LS,JSON.stringify(state));
+          }
+          resolve();
+          return;
+        }
+        // Subsequent updates from other users
+        if(_localSave){_localSave=false;return;}
+        if(!snap.exists)return;
+        state=snap.data().state;
+        migrate(state);
+        localStorage.setItem(LS,JSON.stringify(state));
+        updateProvOptions();syncYrButtons();renderTable();updateCards();
+        toast('🔄 Data diperbarui');
+      },err=>{console.warn('Realtime sync error',err);if(!resolved){resolved=true;resolve();}});
+    }catch(e){
+      console.warn('Firestore unavailable',e);
+      if(!resolved){resolved=true;resolve();}
     }
-  }catch(e){console.warn('Firestore unavailable, using local cache',e);}
-  try{
-    const s=localStorage.getItem(LS);
-    state=s?JSON.parse(s):clone(MASTER);
-  }catch(e){state=clone(MASTER);}
-  // migrate: add provinsi if missing
-  state.forEach(r=>{if(!r.provinsi)r.provinsi='Sumatera Utara';});
+  });
 }
 
 async function saveAll(){
   try{
+    _localSave=true;
     await DOC_REF.set({state,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
     localStorage.setItem(LS,JSON.stringify(state));
     toast('✅ Tersimpan ke Firebase');
   }catch(e){
+    _localSave=false;
     localStorage.setItem(LS,JSON.stringify(state));
     toast('⚠️ Firebase error — tersimpan lokal');
   }
@@ -362,7 +385,8 @@ function importExcel(inp){
       provFilter='';yrFilter=0;
       updateProvOptions();syncYrButtons();
       renderTable();updateCards();
-      toast(`✅ Import ${state.length} daerah dari ${sheetCount} provinsi`);
+      toast(`✅ Import ${state.length} daerah dari ${sheetCount} provinsi — menyimpan…`);
+      saveAll();
     }catch(err){
       console.error(err);
       toast('❌ '+err.message);
