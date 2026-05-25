@@ -398,7 +398,7 @@ function exportExcel(){
   ];
   const ws=XLSX.utils.aoa_to_sheet(rows);
   ws['!cols']=[{wch:5},{wch:32},{wch:22},{wch:22},{wch:20},{wch:16},{wch:22},{wch:9},{wch:22},{wch:42},{wch:42},{wch:42},{wch:42},{wch:52},{wch:16},{wch:52},{wch:16},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:10}];
-  XLSX.utils.book_append_sheet(wb,'DBH-Sawit-2026',ws);
+  XLSX.utils.book_append_sheet(wb,ws,'DBH-Sawit-2026');
   XLSX.writeFile(wb,'DBH_Sawit_2026_Export.xlsx');
   toast('✅ Excel diunduh');
 }
