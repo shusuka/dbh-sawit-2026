@@ -192,6 +192,35 @@ tr.tr-tot td{background:var(--navy)!important;color:#fff;font-weight:800;border-
 
 footer{background:var(--navy);color:rgba(255,255,255,.62);text-align:center;padding:15px;font-size:.73rem}
 footer b{color:#fff}
+
+/* YEAR FILTER CHIPS */
+.yr-filters{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.btn-yr{padding:4px 11px;border-radius:14px;font-size:.7rem;font-weight:700;border:1.5px solid var(--gr2);background:var(--gr1);color:var(--gr5);cursor:pointer;transition:all .18s;white-space:nowrap;font-family:inherit}
+.btn-yr:hover{border-color:var(--navy2);color:var(--navy)}
+.btn-yr.yr-active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn-yr.yr-2026.yr-active{background:var(--green);border-color:var(--green)}
+.btn-yr.yr-2025.yr-active{background:#B87333;border-color:#B87333}
+.btn-yr.yr-2024.yr-active{background:#1A6B8A;border-color:#1A6B8A}
+.btn-yr.yr-2023.yr-active{background:var(--gr5);border-color:var(--gr5)}
+
+/* TA TAG BUTTON */
+.yr-tag-btn{cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+.yr-tag-btn:hover{opacity:.85;transform:scale(1.05)}
+.yr-tag-btn.tag-active{box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 0 4px rgba(255,255,255,.15)}
+
+/* PROVINCE GROUP HEADER ROW */
+.tr-prov td{background:linear-gradient(90deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;font-size:.7rem;font-weight:700;padding:6px 12px;letter-spacing:.4px}
+.prov-hdr-inner{display:flex;align-items:center;gap:6px}
+
+/* PROVINCE SELECT */
+.prov-sel{padding:5px 9px;border:1.5px solid var(--gr2);border-radius:var(--rs);font-size:.77rem;color:var(--gr8);background:#fff;cursor:pointer;min-width:190px;transition:border .2s}
+.prov-sel:focus{outline:none;border-color:var(--red)}
+
+/* Enhanced year-row left stripe */
+.yr-stripe-2026{border-left:3px solid #1A8A4A}
+.yr-stripe-2025{border-left:3px solid #B87333}
+.yr-stripe-2024{border-left:3px solid #1A6B8A}
+.yr-stripe-2023{border-left:3px solid #6B7A99}
 </style>
 </head>
 <body>
@@ -213,7 +242,7 @@ footer b{color:#fff}
       <p>Catatan Pembahasan BA RK &nbsp;·&nbsp; Alokasi, SILPA, Rencana Ruas &amp; Dokumen</p>
     </div>
     <div class="hdr-tags">
-      <span class="tag g">TA 2026</span>
+      <button class="tag g yr-tag-btn" id="tagTA" onclick="setYrFilter(yrFilter===2026?0:2026)" title="Klik untuk filter TA 2026">TA 2026</button>
       <span class="tag">PFID</span>
     </div>
   </div>
@@ -229,6 +258,15 @@ footer b{color:#fff}
     <div class="sep"></div>
     <button class="btn btn-navy" onclick="saveAll()">💾 Simpan</button>
     <button class="btn btn-outline" onclick="resetAll()">↺ Reset</button>
+    <div class="sep"></div>
+    <span style="font-size:.68rem;color:var(--gr5);font-weight:700;flex-shrink:0">TA:</span>
+    <div class="yr-filters">
+      <button class="btn-yr yr-active" id="yrAll" onclick="setYrFilter(0)">Semua</button>
+      <button class="btn-yr yr-2023" id="yrBtn2023" onclick="setYrFilter(2023)">2023</button>
+      <button class="btn-yr yr-2024" id="yrBtn2024" onclick="setYrFilter(2024)">2024</button>
+      <button class="btn-yr yr-2025" id="yrBtn2025" onclick="setYrFilter(2025)">2025</button>
+      <button class="btn-yr yr-2026" id="yrBtn2026" onclick="setYrFilter(2026)">2026</button>
+    </div>
     <input type="text" class="inp" style="width:175px;margin-left:auto" placeholder="🔍 Cari daerah…" id="srch" oninput="renderTable()">
     <span style="font-size:.72rem;color:var(--gr5)" id="tblInfo"></span>
   </div>
@@ -244,7 +282,12 @@ footer b{color:#fff}
   <div class="sec">
     <div class="sec-head">
       <div class="sec-title">Rincian Alokasi &amp; Rencana Ruas Jalan</div>
-      <span style="font-size:.72rem;color:var(--gr5)" id="tblInfo2"></span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <select class="prov-sel" id="provSel" onchange="onProvFilter(this.value)">
+          <option value="">🌏 Semua Provinsi</option>
+        </select>
+        <span style="font-size:.72rem;color:var(--gr5)" id="tblInfo2"></span>
+      </div>
     </div>
     <div class="tbl-scroll">
       <table>

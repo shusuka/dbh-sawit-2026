@@ -1,4 +1,53 @@
 // ── CONSTANTS ──────────────────────────────────────────────────────────────────
+
+// Province abbreviation → full name (for Excel sheet name parsing)
+const PROV_ABBR={
+  'sumut':'Sumatera Utara','aceh':'Aceh','sumbar':'Sumatera Barat',
+  'riau':'Riau','jambi':'Jambi','sumsel':'Sumatera Selatan',
+  'bengkulu':'Bengkulu','lampung':'Lampung',
+  'babel':'Kepulauan Bangka Belitung','kepri':'Kepulauan Riau',
+  'dki':'DKI Jakarta','jabar':'Jawa Barat','jateng':'Jawa Tengah',
+  'diy':'DI Yogyakarta','yogyakarta':'DI Yogyakarta','jatim':'Jawa Timur',
+  'banten':'Banten','bali':'Bali',
+  'ntb':'Nusa Tenggara Barat','ntt':'Nusa Tenggara Timur',
+  'kalbar':'Kalimantan Barat','kalteng':'Kalimantan Tengah',
+  'kalsel':'Kalimantan Selatan','kaltim':'Kalimantan Timur',
+  'kaltara':'Kalimantan Utara','kalut':'Kalimantan Utara',
+  'sulut':'Sulawesi Utara','sulteng':'Sulawesi Tengah',
+  'sulsel':'Sulawesi Selatan','sultra':'Sulawesi Tenggara',
+  'gorontalo':'Gorontalo','sulbar':'Sulawesi Barat',
+  'maluku':'Maluku','malut':'Maluku Utara',
+  'papbar':'Papua Barat','papua':'Papua',
+  'pasel':'Papua Selatan','pateng':'Papua Tengah',
+  'papeg':'Papua Pegunungan','papegunung':'Papua Pegunungan',
+  'pbd':'Papua Barat Daya',
+};
+
+function extractProvName(sheetName){
+  // Strip common suffix patterns
+  let name=sheetName
+    .replace(/-?\s*BA\s*RK\s*DBH.*$/i,'')
+    .replace(/^Prov\.?\s+/i,'')
+    .replace(/^Provinsi\s+/i,'')
+    .trim();
+  const key=name.toLowerCase().replace(/[\s._-]+/g,'');
+  // Direct match
+  if(PROV_ABBR[name.toLowerCase().trim()])return PROV_ABBR[name.toLowerCase().trim()];
+  // Match without spaces/punctuation
+  for(const[abbr,full]of Object.entries(PROV_ABBR)){
+    if(key===abbr.replace(/\s+/g,''))return full;
+  }
+  // Partial match against full province names
+  const norm=name.toLowerCase();
+  for(const prov of PROVINCES){
+    if(prov.toLowerCase()===norm)return prov;
+    const short=prov.toLowerCase().replace(/^(provinsi|kepulauan|kalimantan|sulawesi|sumatera|papua|nusa tenggara)\s+/,'');
+    if(short===norm||norm===short)return prov;
+  }
+  // Title-case fallback
+  return name.split(' ').map(w=>w?w[0].toUpperCase()+w.slice(1).toLowerCase():'').join(' ');
+}
+
 const DAERAH_SUMUT=[
   "Provinsi Sumatera Utara",
   "Kab. Asahan","Kab. Batubara","Kab. Dairi","Kab. Deli Serdang",
@@ -21,8 +70,10 @@ const PROVINCES=["Sumatera Utara","Aceh","Sumatera Barat","Riau","Jambi","Sumate
   "Maluku","Maluku Utara","Papua Barat","Papua","Papua Selatan","Papua Tengah",
   "Papua Pegunungan","Papua Barat Daya"];
 const DOK_LABELS=["BA Porsi","BA Ruas","BA Balai","DED+RAB","Dokumentasi","Resume"];
-const YR_PALETTE=['#1A6B8A','#8A5A1A','#5A1A8A','#1A8A4A','#2A6A5A','#6A1A5A','#5A6A1A','#1A4A8A'];
-const yrColor=yr=>YR_PALETTE[(yr-2023)%YR_PALETTE.length]||YR_PALETTE[0];
+const YR_PALETTE=['#6B7A99','#1A6B8A','#B87333','#1A8A4A','#5A1A8A','#2A6A5A','#6A1A5A','#1A4A8A'];
+const YR_COLOR_MAP={2023:'#6B7A99',2024:'#1A6B8A',2025:'#B87333',2026:'#1A8A4A'};
+const yrColor=yr=>YR_COLOR_MAP[yr]||YR_PALETTE[(yr-2023+8)%YR_PALETTE.length]||YR_PALETTE[0];
+const yrBgAlpha=yr=>yr===2026?'22':yr===2025?'14':'0E';
 
 // ── MASTER DATA (v4 format) ───────────────────────────────────────────────────
 const MASTER=[
