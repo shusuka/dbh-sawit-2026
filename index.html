@@ -33,6 +33,22 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gr0);color:var
 /* HEADER */
 .hdr{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 55%,#1E3A5F 100%);position:relative;overflow:hidden;box-shadow:0 6px 26px rgba(0,0,0,.22)}
 .hdr-gl{position:absolute;inset:0;background:radial-gradient(ellipse at 10% 60%,rgba(206,17,38,.18) 0%,transparent 55%)}
+
+/* PALM TREES */
+.palms{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.palm{position:absolute;bottom:0;display:flex;flex-direction:column;align-items:center;transform-origin:bottom center}
+.palm-trunk{width:6px;border-radius:3px;background:linear-gradient(180deg,#5D4037,#3E2723);position:relative}
+.palm-trunk::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:10px;height:100%;background:repeating-linear-gradient(180deg,rgba(255,255,255,.06) 0px,rgba(255,255,255,.06) 3px,transparent 3px,transparent 8px);border-radius:3px}
+.palm-leaves{position:relative;width:0;height:0}
+.palm-leaf{position:absolute;transform-origin:0% 50%;font-size:inherit}
+@keyframes palmSway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes palmSway2{0%,100%{transform:rotate(3deg)}50%{transform:rotate(-5deg)}}
+@keyframes palmSway3{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(6deg)}}
+.palm:nth-child(1){animation:palmSway 5s ease-in-out infinite}
+.palm:nth-child(2){animation:palmSway2 6.5s ease-in-out infinite}
+.palm:nth-child(3){animation:palmSway3 4.8s ease-in-out infinite}
+.palm:nth-child(4){animation:palmSway 7s ease-in-out infinite 1s}
+.palm:nth-child(5){animation:palmSway2 5.5s ease-in-out infinite .5s}
 .hdr-body{position:relative;z-index:1;display:flex;align-items:center;gap:18px;padding:18px 28px;flex-wrap:wrap}
 .hdr-logo{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;animation:lPls 3.5s ease-in-out infinite}
 @keyframes lPls{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
@@ -42,12 +58,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gr0);color:var
 .hdr-tags{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}
 .tag{padding:4px 11px;border-radius:18px;font-size:.7rem;font-weight:600;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff}
 .tag.g{background:var(--gold);border-color:var(--gold2);color:var(--navy);font-weight:800}
-
-/* TICKER */
-.ticker{background:var(--red);overflow:hidden;padding:6px 0}
-.ticker-i{display:flex;animation:tick 36s linear infinite;white-space:nowrap}
-.ticker-i span{padding:0 38px;font-size:.73rem;color:#fff;font-weight:500}
-@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* WRAP */
 .wrap{max-width:100%;padding:18px 14px;position:relative;z-index:1}
@@ -61,10 +71,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gr0);color:var
 .btn-orange{background:#8A5A1A;color:#fff}.btn-orange:hover{filter:brightness(1.1)}
 .btn-outline{background:#fff;color:var(--gr8);border:2px solid var(--gr2)}.btn-outline:hover{border-color:var(--red);color:var(--red)}
 .sep{width:1px;height:20px;background:var(--gr2);flex-shrink:0}
-.prov-sel-wrap{position:relative}
-.prov-sel{padding:6px 24px 6px 9px;border:2px solid var(--gr2);border-radius:var(--rs);font-size:.79rem;font-weight:600;color:var(--gr8);background:#fff;appearance:none;cursor:pointer;transition:border .2s}
-.prov-sel:focus{outline:none;border-color:var(--red)}
-.prov-sel-wrap::after{content:"▼";position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:.56rem;color:var(--gr5);pointer-events:none}
 #fileIn{display:none}
 
 /* CARDS */
@@ -190,6 +196,7 @@ footer b{color:#fff}
 
 <header class="hdr">
   <div class="hdr-gl"></div>
+  <div class="palms" id="palms"></div>
   <div class="hdr-body">
     <div class="hdr-logo">🏛️</div>
     <div class="hdr-text">
@@ -198,31 +205,15 @@ footer b{color:#fff}
     </div>
     <div class="hdr-tags">
       <span class="tag g">TA 2026</span>
-      <span class="tag">DJPK Kemenkeu RI</span>
+      <span class="tag">PFID</span>
     </div>
   </div>
 </header>
 
-<div class="ticker">
-  <div class="ticker-i">
-    <span>Murni: Total = Alokasi 2026 saja</span>
-    <span>Gabungan: Total = Alokasi 2026 + seluruh SILPA aktif</span>
-    <span>Klik "+ Tahun" untuk menambah tahun 2027, 2028, dst</span>
-    <span>Import / Export: format Excel fefe.xlsx</span>
-    <span>Murni: Total = Alokasi 2026 saja</span>
-    <span>Gabungan: Total = Alokasi 2026 + seluruh SILPA aktif</span>
-    <span>Klik "+ Tahun" untuk menambah tahun 2027, 2028, dst</span>
-    <span>Import / Export: format Excel fefe.xlsx</span>
-  </div>
-</div>
 
 <div class="wrap">
 
   <div class="toolbar">
-    <div class="prov-sel-wrap">
-      <select class="prov-sel" id="provSel"></select>
-    </div>
-    <div class="sep"></div>
     <button class="btn btn-green" onclick="document.getElementById('fileIn').click()">⬆ Import</button>
     <input type="file" id="fileIn" accept=".xlsx,.xls" onchange="importExcel(this)">
     <button class="btn btn-orange" onclick="exportExcel()">⬇ Export</button>
@@ -740,16 +731,43 @@ function exportExcel(){
   toast('✅ Excel diunduh');
 }
 
-// ── PROVINCE DROPDOWN ─────────────────────────────────────────────────────────
-function buildProvDropdown(){
-  const sel=document.getElementById('provSel');
-  PROVINCES.forEach(p=>{
-    const o=document.createElement('option');
-    o.value=p;o.textContent=p+(p!=='Sumatera Utara'?' (belum tersedia)':'');
-    if(p==='Sumatera Utara')o.selected=true;
-    sel.appendChild(o);
+// ── PALM TREES ────────────────────────────────────────────────────────────────
+function spawnPalms(){
+  const wrap=document.getElementById('palms');
+  if(!wrap)return;
+  // Each palm: [left%, height(px), fontSize(px), opacity]
+  const configs=[
+    {l:2,  h:72, fs:22, op:.22},
+    {l:8,  h:54, fs:17, op:.16},
+    {l:88, h:68, fs:20, op:.2},
+    {l:94, h:82, fs:25, op:.18},
+    {l:97, h:46, fs:15, op:.12},
+  ];
+  // leaf angles around top of trunk
+  const leafAngles=[-150,-110,-70,-30,10,50,90,130];
+  configs.forEach(cfg=>{
+    const palm=document.createElement('div');
+    palm.className='palm';
+    palm.style.cssText=`left:${cfg.l}%;opacity:${cfg.op}`;
+    // trunk
+    const trunk=document.createElement('div');
+    trunk.className='palm-trunk';
+    trunk.style.cssText=`height:${cfg.h}px;width:${Math.max(4,cfg.fs*.28)}px`;
+    // leaves container at top of trunk
+    const leavesWrap=document.createElement('div');
+    leavesWrap.className='palm-leaves';
+    leavesWrap.style.cssText=`position:absolute;bottom:${cfg.h-4}px;left:50%`;
+    leafAngles.forEach(ang=>{
+      const leaf=document.createElement('span');
+      leaf.className='palm-leaf';
+      leaf.style.cssText=`font-size:${cfg.fs}px;transform:rotate(${ang}deg) translateX(2px)`;
+      leaf.textContent='🌿';
+      leavesWrap.appendChild(leaf);
+    });
+    palm.appendChild(trunk);
+    palm.appendChild(leavesWrap);
+    wrap.appendChild(palm);
   });
-  sel.addEventListener('change',e=>{if(e.target.value!=='Sumatera Utara'){toast('⚠️ Data provinsi ini belum tersedia');e.target.value='Sumatera Utara';}});
 }
 
 // ── PARTICLES ─────────────────────────────────────────────────────────────────
@@ -764,7 +782,7 @@ function spawnParticles(){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  spawnParticles();buildProvDropdown();loadState();
+  spawnParticles();spawnPalms();loadState();
   setTimeout(()=>{document.getElementById('loader').classList.add('out');setTimeout(()=>{renderTable();updateCards();},200);},1700);
 });
 </script>
