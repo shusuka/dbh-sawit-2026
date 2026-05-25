@@ -12,9 +12,41 @@ function getY26(r){return r.years.find(y=>y.yr===2026)||r.years[r.years.length-1
 function calcTotal(r){return r.murni?getY26(r).val:r.years.reduce((s,y)=>s+y.val,0);}
 function calcJalan(r){return r.g>0?Math.round(calcTotal(r)*r.g/100):0;}
 
-function loadState(){try{const s=localStorage.getItem(LS);state=s?JSON.parse(s):clone(MASTER);}catch(e){state=clone(MASTER);}}
-function saveAll(){localStorage.setItem(LS,JSON.stringify(state));toast('✅ Tersimpan');}
-function resetAll(){if(!confirm('Reset semua ke data asli?'))return;state=clone(MASTER);localStorage.removeItem(LS);renderTable();updateCards();toast('↺ Direset');}
+async function loadState(){
+  // Coba load dari Firestore
+  try{
+    const snap=await DOC_REF.get();
+    if(snap.exists){
+      state=snap.data().state;
+      localStorage.setItem(LS,JSON.stringify(state)); // cache lokal
+      return;
+    }
+  }catch(e){console.warn('Firestore unavailable, using local cache',e);}
+  // Fallback ke localStorage / MASTER
+  try{const s=localStorage.getItem(LS);state=s?JSON.parse(s):clone(MASTER);}catch(e){state=clone(MASTER);}
+}
+
+async function saveAll(){
+  try{
+    await DOC_REF.set({state,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    localStorage.setItem(LS,JSON.stringify(state));
+    toast('✅ Tersimpan ke Firebase');
+  }catch(e){
+    localStorage.setItem(LS,JSON.stringify(state));
+    toast('⚠️ Firebase error — tersimpan lokal');
+  }
+}
+
+async function resetAll(){
+  if(!confirm('Reset semua ke data asli?'))return;
+  state=clone(MASTER);
+  localStorage.removeItem(LS);
+  try{
+    await DOC_REF.set({state,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    toast('↺ Direset ke data awal');
+  }catch(e){toast('↺ Direset (lokal)');}
+  renderTable();updateCards();
+}
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2600);}
@@ -320,7 +352,8 @@ function spawnParticles(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  spawnParticles();spawnPalms();loadState();
+document.addEventListener('DOMContentLoaded',async ()=>{
+  spawnParticles();spawnPalms();
+  await loadState();
   setTimeout(()=>{document.getElementById('loader').classList.add('out');setTimeout(()=>{renderTable();updateCards();},200);},1700);
 });
