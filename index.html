@@ -82,15 +82,41 @@ footer{flex-shrink:0}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:12px;flex-shrink:0}
 .card{background:#fff;border-radius:var(--r);padding:15px;box-shadow:var(--sha);position:relative;overflow:hidden;animation:slideUp .4s ease both}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.cr::before{background:linear-gradient(90deg,var(--red),#FF6B6B)}
-.cn::before{background:linear-gradient(90deg,var(--navy),var(--navy2))}
-.cg::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
-.ck::before{background:linear-gradient(90deg,var(--green),#40D890)}
-.cb::before{background:linear-gradient(90deg,#1A6B8A,#5DADE2)}
-.card-ico{font-size:16px;margin-bottom:6px;display:block}
-.card-lbl{font-size:.64rem;font-weight:700;color:var(--gr5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-.card-val{font-size:1.08rem;font-weight:800;color:var(--gr8)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px}
+.card::after{content:'';position:absolute;bottom:-18px;right:-12px;width:72px;height:72px;border-radius:50%;opacity:.07}
+/* cr — merah */
+.cr{background:linear-gradient(155deg,#FFF0F2 0%,#fff 55%)}
+.cr::before{background:linear-gradient(90deg,#D92B4B,#FF6B6B)}
+.cr::after{background:#D92B4B}
+.cr .card-lbl{color:#B0243E}
+.cr .card-val{color:#C02040}
+/* cb — biru */
+.cb{background:linear-gradient(155deg,#EAF4FB 0%,#fff 55%)}
+.cb::before{background:linear-gradient(90deg,#0F5F8F,#5DADE2)}
+.cb::after{background:#0F5F8F}
+.cb .card-lbl{color:#0F5F8F}
+.cb .card-val{color:#0D4F78}
+/* cg — emas */
+.cg{background:linear-gradient(155deg,#FFFBEA 0%,#fff 55%)}
+.cg::before{background:linear-gradient(90deg,#C47D00,#F7C948)}
+.cg::after{background:#C47D00}
+.cg .card-lbl{color:#A86800}
+.cg .card-val{color:#8F5800}
+/* ck — hijau */
+.ck{background:linear-gradient(155deg,#EDFBF3 0%,#fff 55%)}
+.ck::before{background:linear-gradient(90deg,#0F7A3C,#40D890)}
+.ck::after{background:#0F7A3C}
+.ck .card-lbl{color:#0A6832}
+.ck .card-val{color:#095A2A}
+/* cn — navy/ungu */
+.cn{background:linear-gradient(155deg,#ECEFFE 0%,#fff 55%)}
+.cn::before{background:linear-gradient(90deg,#2E3DAA,#7B88D4)}
+.cn::after{background:#2E3DAA}
+.cn .card-lbl{color:#2E3DAA}
+.cn .card-val{color:#252F88}
+.card-ico{font-size:18px;margin-bottom:6px;display:block}
+.card-lbl{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.card-val{font-size:1.08rem;font-weight:800}
 .card-sub{font-size:.67rem;color:var(--gr5);margin-top:2px}
 
 /* SECTION */
