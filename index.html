@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBH Sawit 2026 — SUMUT</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --red:#CE1126;--red2:#96281B;--navy:#1B2A4A;--navy2:#2C3E6B;
+  --gold:#D4A017;--gold2:#F0C419;--green:#1A8A4A;
+  --gr0:#F3F5FA;--gr1:#E8ECF4;--gr2:#C5CFDE;--gr5:#6B7A99;--gr8:#1E2A40;
+  --sha:0 3px 14px rgba(0,0,0,.08);--r:10px;--rs:6px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gr0);color:var(--gr8)}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,visibility .5s}
+#loader.out{opacity:0;visibility:hidden;pointer-events:none}
+.ld-ico{font-size:54px;animation:ldBob 1.4s ease-in-out infinite}
+@keyframes ldBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.ld-t{color:#fff;font-size:1rem;font-weight:700;margin:14px 0 10px}
+.ld-bar{width:180px;height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.ld-fill{height:100%;background:var(--red);animation:ldFill 1.5s ease forwards}
+@keyframes ldFill{from{width:0}to{width:100%}}
+
+/* PARTICLES */
+#ptc{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.ptc-i{position:absolute;opacity:0;animation:ptcRise linear infinite;color:rgba(206,17,38,.09);font-weight:700;font-size:13px}
+@keyframes ptcRise{0%{transform:translateY(105vh);opacity:0}10%{opacity:1}90%{opacity:.4}100%{transform:translateY(-8vh);opacity:0}}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 55%,#1E3A5F 100%);position:relative;overflow:hidden;box-shadow:0 6px 26px rgba(0,0,0,.22)}
+.hdr-gl{position:absolute;inset:0;background:radial-gradient(ellipse at 10% 60%,rgba(206,17,38,.18) 0%,transparent 55%)}
+.hdr-body{position:relative;z-index:1;display:flex;align-items:center;gap:18px;padding:18px 28px;flex-wrap:wrap}
+.hdr-logo{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;animation:lPls 3.5s ease-in-out infinite}
+@keyframes lPls{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.hdr-text h1{font-size:1.38rem;font-weight:800;color:#fff}
+.hdr-text h1 em{color:var(--gold2);font-style:normal}
+.hdr-text p{color:rgba(255,255,255,.68);font-size:.76rem;margin-top:3px}
+.hdr-tags{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}
+.tag{padding:4px 11px;border-radius:18px;font-size:.7rem;font-weight:600;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff}
+.tag.g{background:var(--gold);border-color:var(--gold2);color:var(--navy);font-weight:800}
+
+/* TICKER */
+.ticker{background:var(--red);overflow:hidden;padding:6px 0}
+.ticker-i{display:flex;animation:tick 36s linear infinite;white-space:nowrap}
+.ticker-i span{padding:0 38px;font-size:.73rem;color:#fff;font-weight:500}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* WRAP */
+.wrap{max-width:100%;padding:18px 14px;position:relative;z-index:1}
+
+/* TOOLBAR */
+.toolbar{background:#fff;border-radius:var(--r);padding:11px 14px;box-shadow:var(--sha);margin-bottom:14px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border:none;border-radius:var(--rs);cursor:pointer;font-weight:700;font-size:.77rem;transition:all .2s;white-space:nowrap}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{background:var(--red2)}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:var(--navy2)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{filter:brightness(1.1)}
+.btn-orange{background:#8A5A1A;color:#fff}.btn-orange:hover{filter:brightness(1.1)}
+.btn-outline{background:#fff;color:var(--gr8);border:2px solid var(--gr2)}.btn-outline:hover{border-color:var(--red);color:var(--red)}
+.sep{width:1px;height:20px;background:var(--gr2);flex-shrink:0}
+.prov-sel-wrap{position:relative}
+.prov-sel{padding:6px 24px 6px 9px;border:2px solid var(--gr2);border-radius:var(--rs);font-size:.79rem;font-weight:600;color:var(--gr8);background:#fff;appearance:none;cursor:pointer;transition:border .2s}
+.prov-sel:focus{outline:none;border-color:var(--red)}
+.prov-sel-wrap::after{content:"▼";position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:.56rem;color:var(--gr5);pointer-events:none}
+#fileIn{display:none}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:11px;margin-bottom:14px}
+.card{background:#fff;border-radius:var(--r);padding:15px;box-shadow:var(--sha);position:relative;overflow:hidden;animation:slideUp .4s ease both}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.cr::before{background:linear-gradient(90deg,var(--red),#FF6B6B)}
+.cn::before{background:linear-gradient(90deg,var(--navy),var(--navy2))}
+.cg::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.ck::before{background:linear-gradient(90deg,var(--green),#40D890)}
+.cb::before{background:linear-gradient(90deg,#1A6B8A,#5DADE2)}
+.card-ico{font-size:16px;margin-bottom:6px;display:block}
+.card-lbl{font-size:.64rem;font-weight:700;color:var(--gr5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.card-val{font-size:1.08rem;font-weight:800;color:var(--gr8)}
+.card-sub{font-size:.67rem;color:var(--gr5);margin-top:2px}
+
+/* SECTION */
+.sec{background:#fff;border-radius:var(--r);box-shadow:var(--sha);overflow:hidden}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:2px solid var(--gr1);flex-wrap:wrap;gap:7px}
+.sec-title{font-size:.88rem;font-weight:800;color:var(--gr8);display:flex;align-items:center;gap:7px}
+.sec-title::before{content:'';width:3px;height:14px;background:var(--red);border-radius:2px}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl-scroll::-webkit-scrollbar{height:5px}
+.tbl-scroll::-webkit-scrollbar-track{background:var(--gr1)}
+.tbl-scroll::-webkit-scrollbar-thumb{background:var(--navy2);border-radius:3px}
+
+/* TABLE */
+table{border-collapse:collapse;width:100%;min-width:1380px}
+thead th{background:var(--navy);color:#fff;padding:9px 10px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0;z-index:20;text-align:left}
+thead th.th-cat{background:#4A3A1A!important}
+thead th.th-dok{background:#1A3A4A!important}
+
+/* CELL TYPES */
+.c-no{width:50px;text-align:center;padding:8px 5px!important;border-right:1px solid var(--gr1);background:#FAFBFD;vertical-align:middle!important}
+.c-daerah{min-width:210px;max-width:230px;padding:8px!important;border-right:2px solid var(--gr2);background:#FAFBFD;vertical-align:top!important}
+.c-yr{width:68px;text-align:center;padding:7px 5px!important;border-right:1px solid var(--gr1);vertical-align:top!important}
+.c-val{min-width:152px;padding:7px 8px!important;border-right:1px solid var(--gr1);vertical-align:top!important}
+.c-ruas{min-width:235px;padding:7px 8px!important;border-right:2px solid var(--gr2);vertical-align:top!important}
+.c-sts{min-width:196px;padding:8px!important;border-right:1px solid var(--gr1);vertical-align:top!important}
+.c-cat{min-width:200px;padding:8px!important;border-right:1px solid var(--gr1);vertical-align:top!important}
+.c-rkp{min-width:200px;padding:8px!important;border-right:1px solid var(--gr1);vertical-align:top!important}
+.c-dok{min-width:152px;padding:8px!important;vertical-align:top!important}
+
+tbody tr.yr-row{border-bottom:1px solid var(--gr1)}
+tbody tr.yr-row.yr-last{border-bottom:3px solid var(--gr2)}
+tbody tr.yr-row:hover td.c-yr,tbody tr.yr-row:hover td.c-val,tbody tr.yr-row:hover td.c-ruas{filter:brightness(.97)}
+
+/* NO CELL content */
+.no-wrap{display:flex;flex-direction:column;align-items:center;gap:3px}
+.no-num{font-weight:800;color:var(--gr5);font-size:.82rem}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--gr2);font-size:.8rem;padding:2px;transition:color .2s}
+.del-btn:hover{color:var(--red)}
+
+/* DAERAH cell */
+.daerah-wrap{position:relative;margin-bottom:6px}
+.daerah-sel{width:100%;padding:6px 22px 6px 8px;border:1.5px solid var(--gr2);border-radius:5px;font-size:.79rem;font-weight:600;color:var(--gr8);background:#fff;appearance:none;cursor:pointer;transition:border .2s}
+.daerah-sel:focus{outline:none;border-color:var(--red)}
+.daerah-wrap::after{content:"▼";position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:.55rem;color:var(--gr5);pointer-events:none}
+.add-yr-btn{display:flex;align-items:center;justify-content:center;gap:4px;background:none;border:1.5px dashed var(--gr2);border-radius:5px;padding:4px 0;font-size:.68rem;font-weight:700;color:var(--gr5);cursor:pointer;width:100%;transition:all .2s}
+.add-yr-btn:hover{border-color:var(--green);color:var(--green);background:rgba(26,138,74,.04)}
+
+/* YEAR badge */
+.yr-badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:.69rem;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:.2px}
+.yr-del{display:block;background:none;border:none;cursor:pointer;color:var(--gr2);font-size:.65rem;padding:1px;width:100%;transition:color .2s}
+.yr-del:hover{color:var(--red)}
+
+/* INPUTS */
+.inp{padding:5px 7px;border:1.5px solid var(--gr2);border-radius:5px;font-size:.77rem;color:var(--gr8);transition:border .2s;background:#fff;width:100%}
+.inp:focus{outline:none;border-color:var(--red)}
+.inp-r{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.inp-pct{width:62px;text-align:center;font-weight:700}
+.ta{padding:5px 7px;border:1.5px solid var(--gr2);border-radius:5px;font-size:.72rem;resize:vertical;line-height:1.5;transition:border .2s;font-family:inherit;width:100%;color:var(--gr8)}
+.ta:focus{outline:none;border-color:var(--red)}
+.ta-ruas{min-height:70px;max-height:220px}
+.ta-cat{min-height:78px;max-height:240px}
+.ta-sm{min-height:50px;max-height:130px}
+.f-lbl{font-size:.62rem;font-weight:700;color:var(--gr5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;display:block}
+
+/* STATUS cell */
+.sts-inner{display:flex;flex-direction:column;gap:7px}
+.tog-wrap{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.tog{width:33px;height:17px;background:var(--gr2);border-radius:9px;position:relative;transition:background .25s;flex-shrink:0}
+.tog::after{content:'';position:absolute;width:13px;height:13px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .25s}
+input.ti:checked+.tog{background:var(--gold)}
+input.ti:checked+.tog::after{transform:translateX(16px)}
+input.ti{display:none}
+.badge-m{background:var(--gold);color:var(--navy);font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:7px;display:inline-block;margin-top:1px}
+.badge-g{background:var(--navy);color:#fff;font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:7px;display:inline-block;margin-top:1px}
+.div-line{height:1px;background:var(--gr1)}
+.tot-val{font-size:.92rem;font-weight:800;color:var(--navy)}
+.jln-val{font-size:.92rem;font-weight:800;color:var(--green)}
+.pct-row{display:flex;align-items:center;gap:5px;margin-top:3px}
+
+/* DOK */
+.dok-list{display:flex;flex-direction:column;gap:4px}
+.dok-i{display:flex;align-items:center;gap:5px;font-size:.71rem}
+.dok-i input{width:13px;height:13px;accent-color:var(--green);cursor:pointer;flex-shrink:0}
+.dok-i label{cursor:pointer;user-select:none}
+
+/* ADD DAERAH */
+.add-daerah{width:100%;padding:10px;background:var(--gr0);border:2px dashed var(--gr2);border-radius:0 0 var(--r) var(--r);cursor:pointer;font-size:.78rem;font-weight:700;color:var(--gr5);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.add-daerah:hover{background:rgba(206,17,38,.04);border-color:var(--red);color:var(--red)}
+
+/* TOTAL ROW */
+tr.tr-tot td{background:var(--navy)!important;color:#fff;font-weight:800;border-top:2px solid var(--navy2);padding:8px 10px;font-size:.77rem;vertical-align:middle}
+
+/* TOAST */
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:8px 20px;border-radius:16px;font-size:.78rem;font-weight:600;z-index:9998;box-shadow:0 4px 14px rgba(0,0,0,.3);opacity:0;transition:opacity .35s;pointer-events:none;white-space:nowrap}
+
+footer{background:var(--navy);color:rgba(255,255,255,.62);text-align:center;padding:15px;font-size:.73rem}
+footer b{color:#fff}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="ld-ico">🏛️</div>
+  <div class="ld-t">Memuat Data DBH Sawit 2026…</div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+</div>
+<div id="ptc"></div>
+
+<header class="hdr">
+  <div class="hdr-gl"></div>
+  <div class="hdr-body">
+    <div class="hdr-logo">🏛️</div>
+    <div class="hdr-text">
+      <h1>DBH Sawit <em>2026</em> — Sektor Infrastruktur</h1>
+      <p>Catatan Pembahasan BA RK &nbsp;·&nbsp; Alokasi, SILPA, Rencana Ruas &amp; Dokumen</p>
+    </div>
+    <div class="hdr-tags">
+      <span class="tag g">TA 2026</span>
+      <span class="tag">DJPK Kemenkeu RI</span>
+    </div>
+  </div>
+</header>
+
+<div class="ticker">
+  <div class="ticker-i">
+    <span>Murni: Total = Alokasi 2026 saja</span>
+    <span>Gabungan: Total = Alokasi 2026 + seluruh SILPA aktif</span>
+    <span>Klik "+ Tahun" untuk menambah tahun 2027, 2028, dst</span>
+    <span>Import / Export: format Excel fefe.xlsx</span>
+    <span>Murni: Total = Alokasi 2026 saja</span>
+    <span>Gabungan: Total = Alokasi 2026 + seluruh SILPA aktif</span>
+    <span>Klik "+ Tahun" untuk menambah tahun 2027, 2028, dst</span>
+    <span>Import / Export: format Excel fefe.xlsx</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="toolbar">
+    <div class="prov-sel-wrap">
+      <select class="prov-sel" id="provSel"></select>
+    </div>
+    <div class="sep"></div>
+    <button class="btn btn-green" onclick="document.getElementById('fileIn').click()">⬆ Import</button>
+    <input type="file" id="fileIn" accept=".xlsx,.xls" onchange="importExcel(this)">
+    <button class="btn btn-orange" onclick="exportExcel()">⬇ Export</button>
+    <div class="sep"></div>
+    <button class="btn btn-navy" onclick="saveAll()">💾 Simpan</button>
+    <button class="btn btn-outline" onclick="resetAll()">↺ Reset</button>
+    <input type="text" class="inp" style="width:175px;margin-left:auto" placeholder="🔍 Cari daerah…" id="srch" oninput="renderTable()">
+    <span style="font-size:.72rem;color:var(--gr5)" id="tblInfo"></span>
+  </div>
+
+  <div class="cards">
+    <div class="card cr" style="animation-delay:.05s"><span class="card-ico">💰</span><div class="card-lbl">Alokasi Murni 2026</div><div class="card-val" id="cv1">Rp 0</div><div class="card-sub" id="cs1">—</div></div>
+    <div class="card cb" style="animation-delay:.1s"><span class="card-ico">📊</span><div class="card-lbl">Total SILPA (2023–2025)</div><div class="card-val" id="cv2">Rp 0</div><div class="card-sub">Sisa anggaran aktif</div></div>
+    <div class="card cg" style="animation-delay:.15s"><span class="card-ico">📈</span><div class="card-lbl">Total Konsolidasi</div><div class="card-val" id="cv3">Rp 0</div><div class="card-sub">Alokasi + SILPA aktif</div></div>
+    <div class="card ck" style="animation-delay:.2s"><span class="card-ico">🛣️</span><div class="card-lbl">Total Alokasi Jalan</div><div class="card-val" id="cv4">Rp 0</div><div class="card-sub">Sektor infrastruktur</div></div>
+    <div class="card cn" style="animation-delay:.25s"><span class="card-ico">📋</span><div class="card-lbl">Kelengkapan Dokumen</div><div class="card-val" id="cv5">0%</div><div class="card-sub" id="cs5">—</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head">
+      <div class="sec-title">Rincian Alokasi &amp; Rencana Ruas Jalan</div>
+      <span style="font-size:.72rem;color:var(--gr5)" id="tblInfo2"></span>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px;text-align:center">NO</th>
+            <th style="min-width:210px">DAERAH</th>
+            <th style="width:68px;text-align:center">TAHUN</th>
+            <th style="min-width:152px">NILAI (Rp)</th>
+            <th style="min-width:235px">RUAS</th>
+            <th style="min-width:196px">STATUS &amp; TOTAL</th>
+            <th class="th-cat" style="min-width:200px">CATATAN PFID</th>
+            <th class="th-cat" style="min-width:200px">CATATAN RKP</th>
+            <th class="th-dok" style="min-width:152px">DOKUMEN</th>
+          </tr>
+        </thead>
+        <tbody id="tblBody"></tbody>
+      </table>
+    </div>
+    <button class="add-daerah" onclick="addRow()">＋ Tambah Daerah</button>
+  </div>
+</div>
+
+<footer><b>DBH Sawit 2026 — Infrastruktur Jalan</b> &nbsp;·&nbsp; DJPK Kementerian Keuangan RI</footer>
+<div id="toast"></div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────────────────────
+const DAERAH_SUMUT=[
+  "Provinsi Sumatera Utara",
+  "Kab. Asahan","Kab. Batubara","Kab. Dairi","Kab. Deli Serdang",
+  "Kab. Humbang Hasundutan","Kab. Karo","Kab. Labuhanbatu",
+  "Kab. Labuhanbatu Selatan","Kab. Labuhanbatu Utara","Kab. Langkat",
+  "Kab. Mandailing Natal","Kab. Nias","Kab. Nias Barat","Kab. Nias Selatan",
+  "Kab. Nias Utara","Kab. Padang Lawas","Kab. Padang Lawas Utara",
+  "Kab. Pakpak Bharat","Kab. Samosir","Kab. Serdang Bedagai",
+  "Kab. Simalungun","Kab. Tapanuli Selatan","Kab. Tapanuli Tengah",
+  "Kab. Tapanuli Utara","Kab. Toba",
+  "Kota Binjai","Kota Gunungsitoli","Kota Medan","Kota Padang Sidempuan",
+  "Kota Pematang Siantar","Kota Sibolga","Kota Tanjung Balai","Kota Tebing Tinggi"
+];
+const PROVINCES=["Sumatera Utara","Aceh","Sumatera Barat","Riau","Jambi","Sumatera Selatan",
+  "Bengkulu","Lampung","Kepulauan Bangka Belitung","Kepulauan Riau","DKI Jakarta",
+  "Jawa Barat","Jawa Tengah","DI Yogyakarta","Jawa Timur","Banten","Bali",
+  "Nusa Tenggara Barat","Nusa Tenggara Timur","Kalimantan Barat","Kalimantan Tengah",
+  "Kalimantan Selatan","Kalimantan Timur","Kalimantan Utara","Sulawesi Utara",
+  "Sulawesi Tengah","Sulawesi Selatan","Sulawesi Tenggara","Gorontalo","Sulawesi Barat",
+  "Maluku","Maluku Utara","Papua Barat","Papua","Papua Selatan","Papua Tengah",
+  "Papua Pegunungan","Papua Barat Daya"];
+const DOK_LABELS=["BA Porsi","BA Ruas","BA Balai","DED+RAB","Dokumentasi"];
+const YR_PALETTE=['#1A6B8A','#8A5A1A','#5A1A8A','#1A8A4A','#2A6A5A','#6A1A5A','#5A6A1A','#1A4A8A'];
+const yrColor=yr=>YR_PALETTE[(yr-2023)%YR_PALETTE.length]||YR_PALETTE[0];
+
+// ── MASTER DATA (v4 format) ───────────────────────────────────────────────────
+const MASTER=[
+{no:1,nama:"Provinsi Sumatera Utara",g:80,murni:false,cat:"Revisi BA porsi, belum menentukan pemilihan ruas. Pembahasan terakhir 28 Jan 2026 → pilih ruas lanjutan semua.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Jembatan Merah - Muara Soma\nMuara Soma - Sp. Gambir\nBts. Binjai - Kuala\nSp. Namu Ukur - Bts. Karo\nTanah Jawa - Bts. Asahan\nPerdagangan - Bdr Masilam - Bts. Batubara"},
+ {yr:2024,val:6081411868,ruas:"Kp. Binjai - Bandar Khalipah\nAek Godang - Sihaporas\nSihaporas - Paringgonan"},
+ {yr:2025,val:0,ruas:"Aek Kota Batu - Bts. Tobasa"},
+ {yr:2026,val:15226554000,ruas:"Sihaporas - Paringgonan (lanjutan 2024)"}]},
+{no:2,nama:"Kab. Asahan",g:84.80,murni:false,cat:"BA porsi sesuai. SILPA 2023-2024 untuk ruas lanjutan. TA 2026 murni untuk ruas baru. BA RK: 2 ruas (lanjutan + baru).",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Simpang Pabrik Benang - Bukit Katarina (Jln Propinsi)\n(Simpang SMP) Pulau Rakyat - Simpang IV (Parsaoran)"},
+ {yr:2024,val:615454507,ruas:"(Jln Nasional) Pasar Miring - Sei Lama (Bts. Kecamatan)\nSimpang Alang Bombon - Rawa Sari (Simpang Laban)"},
+ {yr:2025,val:0,ruas:"Aek Nagali - Simpang Rambung Merah"},
+ {yr:2026,val:4336441000,ruas:"Simpang Alang Bombon - Rawa Sari (Simpang Laban)\nLedong Barat - Aek Bange"}]},
+{no:3,nama:"Kab. Dairi",g:80,murni:true,cat:"BA porsi murni 2026, jalan 80%. SILPA sudah dipakai 2025. Cek ruas baru sesuai SK.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Jalan Jrs. Pardamean"},
+ {yr:2024,val:1276273438,ruas:"Jalan Jrs Sopobutar - Pordomuan 2"},
+ {yr:2025,val:0,ruas:""},
+ {yr:2026,val:1508376000,ruas:"Pardamean - Sopobutar"}]},
+{no:4,nama:"Kab. Deli Serdang",g:80,murni:false,cat:"Perbaikan BA porsi ket. alokasi 2026 + SILPA 23-24. Ruas baru + lanjutan.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Pasar X - Desa Saentis\nPasar 8 Biru Biru - Biru Biru"},
+ {yr:2024,val:683673530,ruas:"Percut (Cinta Damai) - Ds. Sei Tuan\nDsn Karang Luas - Sialang Muda Dsn II\nJl. Kp. Manggis"},
+ {yr:2025,val:0,ruas:"Sei Merah - Batu Lokong"},
+ {yr:2026,val:2364591000,ruas:"Naga Timbul - Batu Lokong"}]},
+{no:5,nama:"Kab. Karo",g:82.90,murni:true,cat:"BA Porsi Murni 2026, jalan 80%. SILPA sudah dipakai 2025. Ruas lanjutan 2025 OK.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Laupakam - Janji Matogu"},
+ {yr:2024,val:349051462,ruas:"Jl. Selamat Ketaren\nMardinding - Lau Mandin - Lau Garut"},
+ {yr:2025,val:0,ruas:"Mardinding - Lau Mandin - Lau Garut"},
+ {yr:2026,val:1871073000,ruas:"Mardinding - Lau Mandin - Lau Garut"}]},
+{no:6,nama:"Kab. Labuhanbatu",g:80,murni:true,cat:"BA porsi pakai alokasi 2026 saja. Ruas baru sambungan lanjutan DBH 2024.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Bangun Sari - Janji\nSei Rakyat - Sei Siarti"},
+ {yr:2024,val:1463760300,ruas:"Padang Matinggi - Suka Makmur"},
+ {yr:2025,val:0,ruas:"Sei Tampang - Sido Makmur"},
+ {yr:2026,val:3666930000,ruas:"Suka Makmur - Tanjung Harapan"}]},
+{no:7,nama:"Kab. Langkat",g:83,murni:false,cat:"SILPA 2023-2024 belum dikerjakan di RKP Perubahan 2025. BA porsi sesuai. Lanjut ke Balai.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Sp. Kepala Sungai - Hinai Kiri"},
+ {yr:2024,val:2290683540,ruas:"Jl. Sp. Kacangan - Perkotaan Kec. Secanggang"},
+ {yr:2025,val:0,ruas:"Jl. Batu Katak - Batu Jonjong\nSP. Kepala Sungai - Hinai Kiri"},
+ {yr:2026,val:3684300000,ruas:"SP. Kepala Sungai - Hinai Kiri"}]},
+{no:8,nama:"Kab. Mandailing Natal",g:80,murni:false,cat:"BA porsi revisi format baru. Format BA PFID disesuaikan dan ruas lanjutan.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Padang Silonjongan - Ranto Panjang\nSimp. Bintungan Bajangkar - Simp. Sikapas"},
+ {yr:2024,val:998460534,ruas:"Padang Silonjongan - Ranto Panjang\nSimp. Bintungan Bajangkar - Simp. Sikapas"},
+ {yr:2025,val:0,ruas:"Padang Silonjongan - Ranto Panjang"},
+ {yr:2026,val:2416277000,ruas:"Padang Silonjongan - Ranto Panjang"}]},
+{no:9,nama:"Kab. Nias",g:85,murni:false,cat:"BA Porsi OK. Perbaikan format BA PFID ruas lanjutan 2023.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,0],years:[
+ {yr:2023,val:0,ruas:"Sisarahili - Balale Toba'a"},
+ {yr:2024,val:2712150000,ruas:"Hiliwaele I - Dola Fadoro Hunugoa"},
+ {yr:2025,val:0,ruas:"Hiliwaele I - Dola Fadoro Hunugoa"},
+ {yr:2026,val:400000000,ruas:"Sisarahili - Balale Toba'a"}]},
+{no:10,nama:"Kab. Simalungun",g:85,murni:false,cat:"Pembagian porsi diperbaiki karena melebihi 85% (pakai 2026 + SILPA). Penentuan ruas masih dibahas.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Nagojor - Bah Jambi"},
+ {yr:2024,val:6412536689,ruas:"Simp. Nagojor - Nagojor"},
+ {yr:2025,val:0,ruas:"Balimbingan - Maligas Tongah"},
+ {yr:2026,val:3657005000,ruas:""}]},
+{no:11,nama:"Kab. Tapanuli Selatan",g:85,murni:false,cat:"BA Porsi OK (2026 + SILPA). BA PFID perlu keterangan STA Penanganan multi financing.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Pardomuan - Mosa (Bts. Batang Angkola)"},
+ {yr:2024,val:917412000,ruas:"Pardomuan - Mosa (Bts. Batang Angkola)\nSimp. Jl. Nas. (Amboriang) Aek Sabatang"},
+ {yr:2025,val:0,ruas:"Simp. Jl. Nas. (Amboriang) Aek Sabatang"},
+ {yr:2026,val:2955732000,ruas:"Pardomuan - Mosa (Bts. Batang Angkola)"}]},
+{no:12,nama:"Kab. Tapanuli Tengah",g:80.13,murni:true,cat:"BA porsi murni 2026. Ruas baru mohon diasistenkan ke Balai.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Jalan Penghubung Trans Sp I - Sp II\nRaso - Partodungan"},
+ {yr:2024,val:1519401600,ruas:"Lumut - Sihiong\nKolang - Hutatinggul\nManduamas Lama - Simanuk-manuk"},
+ {yr:2025,val:0,ruas:"Raso - Partodungan\nHutanabolon - Watas Taput"},
+ {yr:2026,val:2062904000,ruas:"Mela - Aloban/Bair"}]},
+{no:13,nama:"Kab. Tapanuli Utara",g:84.99,murni:false,cat:"BA porsi tambah kolom keterangan rincian SILPA & alokasi 26. Masih diskusi pemilihan ruas.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Lbn Pinasa - Parsosoran - Gotting Salak\nSarulla - Sipetang"},
+ {yr:2024,val:677475817,ruas:"Hutagurgur - Muara Tolang - Bts Tapsel\nHutamamungka - Bonan Dolok - Sialogo"},
+ {yr:2025,val:0,ruas:"Garoga - Rianiate"},
+ {yr:2026,val:1545079000,ruas:"Rappa Tumus - Hajoran"}]},
+{no:14,nama:"Kab. Toba",g:80,murni:true,cat:"BA Porsi format baru, nilai alokasi murni 2026. Ruas 2026 baru OK. Lanjut ke Balai Jalan.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Lobu Jior - Adian Baja"},
+ {yr:2024,val:8529790240,ruas:"Lobu Jior - Adian Baja"},
+ {yr:2025,val:0,ruas:"Paridian - Napojoring"},
+ {yr:2026,val:1476687000,ruas:"Pantil Lbn. Galagala - Sitarak"}]},
+{no:15,nama:"Kota Binjai",g:85,murni:true,cat:"Pembahasan susulan dengan PFID.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Jl. Jamin Ginting\nJl. Bangau\nJl. Sei Lepan\nJl. Sei Bahorok\nJl. Gunung Bendahara\nJl. Samanhudi"},
+ {yr:2024,val:10540529801,ruas:"Jl. Cendrawasih\nJl. Gunung Sinabung\nJl. Rukam\nJl. Semangka\nJl. Anggur"},
+ {yr:2025,val:0,ruas:"Jl. M. Sutoyo"},
+ {yr:2026,val:400000000,ruas:"Jl. Sei Wampu"}]},
+{no:16,nama:"Kota Medan",g:85,murni:false,cat:"Perbaikan porsi karena alokasi hanya Rp 400 juta. Ruas baru.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Jl. Sampali\nJl. Sampali - Jl. Tenggiri (Jembatan)"},
+ {yr:2024,val:406963895,ruas:"Jl. Sampali\nJl. Sampali - Jl. Gabus (Jembatan)"},
+ {yr:2025,val:0,ruas:"Jl. Kejaksaan (Jembatan)"},
+ {yr:2026,val:400000000,ruas:"Jl. Hiu Kec. Medan Belawan"}]},
+{no:17,nama:"Kota Pematang Siantar",g:0,murni:false,cat:"",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Jl. Dr. Sutomo"},
+ {yr:2024,val:105132000,ruas:"Jl. Merdeka"},
+ {yr:2025,val:0,ruas:"Batu Permata Raya"},
+ {yr:2026,val:400000000,ruas:""}]},
+{no:18,nama:"Kota Sibolga",g:80,murni:false,cat:"Memakai SILPA 2023-2024 dan alokasi 2026. Per 19 Jan 2026 perubahan ruas menjadi Jl. Bawal.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Jl. Putri Runduk\nJl. Merpati"},
+ {yr:2024,val:102118980,ruas:"Jl. D.E. Sutan Bungaran Panggabean\nJl. Meranti"},
+ {yr:2025,val:0,ruas:"Jl. Com. Yos Sudarso"},
+ {yr:2026,val:400000000,ruas:"Jl. Bawal"}]},
+{no:19,nama:"Kota Tanjung Balai",g:85,murni:false,cat:"Perbaikan format BA porsi memakai SILPA dan 2026. Penyesuaian jenis penanganan.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Jalan Anwar Idris"},
+ {yr:2024,val:196275576,ruas:"Jalan Anwar Idris\nJalan AMD 60"},
+ {yr:2025,val:0,ruas:"Jalan Anwar Idris"},
+ {yr:2026,val:400000000,ruas:"Jalan Anwar Idris"}]},
+{no:20,nama:"Kota Tebing Tinggi",g:85,murni:false,cat:"Perbaikan porsi BA — Rp 62 juta dikeluarkan karena masuk RKP Perubahan 2025. Cek harga satuan berkala.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Jalan Pandan\nJalan D. Belaian"},
+ {yr:2024,val:84366433,ruas:"Jalan P. Buru\nJalan Sosial"},
+ {yr:2025,val:0,ruas:"Jalan Ikhlas Berohol"},
+ {yr:2026,val:400000000,ruas:"Jl. Wiratama"}]},
+{no:21,nama:"Kota Padang Sidempuan",g:85,murni:false,cat:"BA porsi dibahas kembali, harus di rentang 80-85%. Ruas: cek kemantapan tahun sebelumnya.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Jln. Pijor Koling / Mgr. Imbang Desa\nJln. Bargot Topong"},
+ {yr:2024,val:862582246,ruas:"Jl. Partihaman Saroha\nJln. Perjuangan / Mayor Bejo"},
+ {yr:2025,val:0,ruas:"Jln. Balakka Sipunggur"},
+ {yr:2026,val:1352829000,ruas:"Jalan BM. Muda / Eks Jl. Silandit"}]},
+{no:22,nama:"Kab. Pakpak Bharat",g:81.53,murni:false,cat:"Revisi BA ttd tempelan. BA porsi pakai 2026 dan SILPA. Ruas lanjutan 2025.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Lae Mbentar - Watas NAD"},
+ {yr:2024,val:407157627,ruas:"Lae Mbentar - Watas NAD"},
+ {yr:2025,val:0,ruas:"Sibande - Genting"},
+ {yr:2026,val:956861000,ruas:"Sibande - Genting"}]},
+{no:23,nama:"Kab. Nias Selatan",g:80,murni:false,cat:"Sisa DBH Sawit TA 2024 hanya Rp 761 juta. Perlu konfirmasi sisa SILPA 2023-2024. BA porsi pakai alokasi 2026 saja.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Jl. Hilizalo'otano\nJl. Bawomataluo\nJl. Bawogosali"},
+ {yr:2024,val:767308853,ruas:"Jl. Hilisaloo\nJl. Dari Kantor DPRD - Bawomataluo"},
+ {yr:2025,val:0,ruas:"Jl. Hilisaloo"},
+ {yr:2026,val:611378000,ruas:"Jl. Hilisaloo"}]},
+{no:24,nama:"Kab. Humbang Hasundutan",g:85,murni:false,cat:"BA Porsi OK (SILPA + 2026). Ruas baru untuk 2026. Revisi BA RK hanya tampilkan ruas jalan usulan.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Pusu I - Parlilitan"},
+ {yr:2024,val:68005130,ruas:"Pusu I - Parlilitan"},
+ {yr:2025,val:0,ruas:"Pusu I - Parlilitan"},
+ {yr:2026,val:1231860000,ruas:"Aek Sopang - Parmonangan - Lae Umbulan - Lae Hundulan"}]},
+{no:25,nama:"Kab. Serdang Bedagai",g:80,murni:false,cat:"BA porsi belum TTD tapi sudah sesuai. Rencana kerjakan SILPA 2023-2024. Ada jembatan rusak hambat mobilisasi.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Bantan - Bukit Cermin\nBandar Bayu - Sialtong\nPekan Tanjung Beringin - Desa Tebing Tinggi\nRimbun - Kampung Lalang"},
+ {yr:2024,val:242706691,ruas:"Bantan - Bukit Cermin\nBandar Bayu - Sialtong\nPekan Tanjung Beringin - Desa Tebing Tinggi\nRimbun - Kampung Lalang"},
+ {yr:2025,val:0,ruas:"Simp. Silinda - Batas Kec. Kotarih (Jembatan Bane)"},
+ {yr:2026,val:2635480000,ruas:"Manggis - Kelapa Bajohom"}]},
+{no:26,nama:"Kab. Samosir",g:85,murni:true,cat:"Terdapat SILPA 2023-2024 yang belum dilaksanakan, namun BA menggunakan ruas baru untuk TA 2026.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Simpang 4 Onan Runggu - Lagundi"},
+ {yr:2024,val:365253026,ruas:"Sp. Jalan Propinsi - Desa Parmonangan"},
+ {yr:2025,val:0,ruas:"Aek Rangat - Sp. Tulas"},
+ {yr:2026,val:400000000,ruas:"Huta Tinggi - Simandepe"}]},
+{no:27,nama:"Kab. Batubara",g:80,murni:false,cat:"BA Porsi sesuai (hanya 2026). Ruas lanjutan tahun 2024.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Siparepare - Kampung Lalang"},
+ {yr:2024,val:1561023633,ruas:"Bagan Baru - Tambun Tulang"},
+ {yr:2025,val:0,ruas:"Pelompatan"},
+ {yr:2026,val:2196594000,ruas:"Simpang Posko - Sibira-bira\nBagan Baru - Tambun Tulang"}]},
+{no:28,nama:"Kab. Padang Lawas",g:80,murni:false,cat:"BA Porsi perbaikan format baru (SILPA + 2026). Masih diskusi pemilihan ruas lanjutan atau baru.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Sp. 3 Pir Trans Sosa III - Pir Trans Sosa II\nSembilang I"},
+ {yr:2024,val:2851839200,ruas:"SP. Ganal - PP. Makmur - Ramba\nRamba - Tobing Tinggi"},
+ {yr:2025,val:0,ruas:"Sp. Tamosu - Padang Hasior Lombang"},
+ {yr:2026,val:3009506000,ruas:"SP. Propinsi Sigala Gala"}]},
+{no:29,nama:"Kab. Padang Lawas Utara",g:84.99,murni:true,cat:"Pembagian porsi diperbaiki (melebihi 85%) → pakai 2026 saja. Ruas lanjutan menyesuaikan BA porsi final.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Sipaho - Batu Pulut - Sialang Bujing\nPinarik - Batas Labuhan Batu\nSp. Paya Baung - Paya Baung\nSibatu Loting - Batu Tambun"},
+ {yr:2024,val:612299500,ruas:"Sibatu Loting - Batu Tambun\nSimangambat Julu - Ujung Gading Julu"},
+ {yr:2025,val:0,ruas:"Simangambat Julu - Ujung Gading Julu"},
+ {yr:2026,val:3913229000,ruas:"Simangambat Julu - Ujung Gading Julu"}]},
+{no:30,nama:"Kab. Labuhanbatu Selatan",g:85,murni:true,cat:"Hanya alokasi murni 2026 karena SILPA belum fix. BA porsi belum TTD. Ruas 2026 baru masih dibahas.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Jalan Negara (Sp. Tolan) - Tanjung Medan - Tanjung Mulia - Sidomulyo - Podorukun - Bts. Prov. Riau"},
+ {yr:2024,val:1136548845,ruas:"Jalan Negara (Sp. Tolan) - Tanjung Medan - Tanjung Mulia - Sidomulyo - Podorukun - Bts. Prov. Riau"},
+ {yr:2025,val:0,ruas:"Sp. Tugu Cikampek - Aek Raso - Torganda - Cindur"},
+ {yr:2026,val:4209488000,ruas:"Simaninggir - Asam Jawa"}]},
+{no:31,nama:"Kab. Labuhanbatu Utara",g:85,murni:true,cat:"Perbaikan format BA Porsi (memakai Alokasi 2026 murni). Ruas OK.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Padang Maninjau - Parsiluman"},
+ {yr:2024,val:2253388409,ruas:"Marbau - Miliano - Pulo Bargot"},
+ {yr:2025,val:0,ruas:"Siranggong - Simangalam"},
+ {yr:2026,val:4099612000,ruas:"Aek Kanopan - Bandar Manis (PT. Sinar Mas Kebun Kanapon Ulu)"}]},
+{no:32,nama:"Kab. Nias Utara",g:85,murni:false,cat:"Perbaikan BA karena porsi terlalu banyak untuk jalan (hanya SILPA 23-24). Sesuaikan BA porsi final PMK.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[1,1,1,1,1],years:[
+ {yr:2023,val:0,ruas:"Lotu - Bogali - Awa'ai\nJembatan Lafau (Fadoro Hilimbowo)"},
+ {yr:2024,val:1652371800,ruas:"Loloana'a - Fabaliwa - Harefanaese - Anoma - Ononazara"},
+ {yr:2025,val:0,ruas:""},
+ {yr:2026,val:0,ruas:"Lotu - Bogali - Awa'ai"}]},
+{no:33,nama:"Kab. Nias Barat",g:80,murni:true,cat:"BA Porsi sesuai (hanya 2026). Ruas lanjutan tahun 2025.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Jl. Gatot Subroto\nJl. Soekarno Hatta"},
+ {yr:2024,val:6020280860,ruas:"Lologundre - Ombolata"},
+ {yr:2025,val:0,ruas:"Lologundre - Ombolata"},
+ {yr:2026,val:400000000,ruas:"Lologundre - Ombolata"}]},
+{no:34,nama:"Kota Gunungsitoli",g:0,murni:false,cat:"Data masih dalam proses konfirmasi.",tglRuas:"2026-01-14",catRkp:"",tglRkp:"",dok:[0,0,0,0,0],years:[
+ {yr:2023,val:0,ruas:"Lozasai - Bakaro\nTetehosi I"},
+ {yr:2024,val:10387,ruas:"Ombolata Idanoi - Onowaembo Idanoi"},
+ {yr:2025,val:0,ruas:""},
+ {yr:2026,val:0,ruas:""}]},
+];
+
+// ── STATE & UTILS ─────────────────────────────────────────────────────────────
+const LS='dbh26_v4_sumut';
+let state=[];
+const clone=x=>JSON.parse(JSON.stringify(x));
+const parseRp=v=>{if(!v&&v!==0)return 0;if(typeof v==='number')return Math.round(v);return parseInt(String(v).replace(/[^0-9]/g,''))||0;};
+const fmt=n=>'Rp '+Math.round(n||0).toLocaleString('id-ID');
+const fmtI=n=>n>0?Math.round(n).toLocaleString('id-ID'):'';
+const excelToDate=s=>{if(!s||typeof s!=='number')return'';return new Date((s-25569)*86400000).toISOString().split('T')[0];};
+const dateToExcel=s=>{if(!s)return'';return Math.round(new Date(s).getTime()/86400000)+25569;};
+
+function getY26(r){return r.years.find(y=>y.yr===2026)||r.years[r.years.length-1]||{val:0};}
+function calcTotal(r){return r.murni?getY26(r).val:r.years.reduce((s,y)=>s+y.val,0);}
+function calcJalan(r){return r.g>0?Math.round(calcTotal(r)*r.g/100):0;}
+
+function loadState(){try{const s=localStorage.getItem(LS);state=s?JSON.parse(s):clone(MASTER);}catch(e){state=clone(MASTER);}}
+function saveAll(){localStorage.setItem(LS,JSON.stringify(state));toast('✅ Tersimpan');}
+function resetAll(){if(!confirm('Reset semua ke data asli?'))return;state=clone(MASTER);localStorage.removeItem(LS);renderTable();updateCards();toast('↺ Direset');}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2600);}
+
+// ── COUNT-UP ──────────────────────────────────────────────────────────────────
+function countUp(id,target){const el=document.getElementById(id);if(!el)return;const d=900,t0=performance.now();(function f(now){const p=Math.min((now-t0)/d,1),v=Math.round(target*(1-Math.pow(1-p,3)));el.textContent='Rp '+v.toLocaleString('id-ID');if(p<1)requestAnimationFrame(f);})(t0);}
+
+// ── CARDS ─────────────────────────────────────────────────────────────────────
+function updateCards(){
+  const data=filtered();
+  const sumD=data.reduce((s,r)=>s+(getY26(r).val||0),0);
+  const sumSilpa=data.reduce((s,r)=>s+r.years.filter(y=>y.yr<2026).reduce((a,y)=>a+y.val,0),0);
+  countUp('cv1',sumD); countUp('cv2',sumSilpa);
+  countUp('cv3',data.reduce((s,r)=>s+calcTotal(r),0));
+  countUp('cv4',data.reduce((s,r)=>s+calcJalan(r),0));
+  const dok=data.length?Math.round(data.reduce((s,r)=>s+r.dok.reduce((a,b)=>a+b,0),0)/(data.length*5)*100):0;
+  document.getElementById('cv5').textContent=dok+'%';
+  document.getElementById('cs1').textContent=data.length+' daerah';
+  document.getElementById('cs5').textContent=(data.length*5)+' total item';
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────────
+function filtered(){const q=document.getElementById('srch').value.toLowerCase().trim();return q?state.filter(r=>r.nama.toLowerCase().includes(q)):state;}
+
+// ── RENDER TABLE ──────────────────────────────────────────────────────────────
+function getDaerahOpts(sel){return DAERAH_SUMUT.map(d=>`<option value="${d}" ${d===sel?'selected':''}>${d}</option>`).join('');}
+
+function renderTable(){
+  const tb=document.getElementById('tblBody'); tb.innerHTML='';
+  const data=filtered();
+  const info=data.length+' dari '+state.length+' daerah';
+  document.getElementById('tblInfo').textContent=info;
+  document.getElementById('tblInfo2').textContent=info;
+
+  data.forEach((r,idx)=>{
+    const ri=state.indexOf(r);
+    const nY=r.years.length||1;
+    const tot=calcTotal(r),jln=calcJalan(r),M=r.murni;
+
+    r.years.forEach((y,yi)=>{
+      const tr=document.createElement('tr');
+      tr.className='yr-row'+(yi===nY-1?' yr-last':'');
+      tr.dataset.ri=ri; tr.dataset.yi=yi;
+      const col=yrColor(y.yr);
+      const lbl=y.yr===2026?'Alokasi DBH '+y.yr:(y.yr>2026?'Rencana '+y.yr:'SILPA '+y.yr);
+
+      let h='';
+      if(yi===0){
+        h+=`<td class="c-no" rowspan="${nY}">
+  <div class="no-wrap">
+    <span class="no-num">${r.no||idx+1}</span>
+    <button class="del-btn" onclick="delRow(${ri})" title="Hapus daerah">✕</button>
+  </div>
+</td>
+<td class="c-daerah" rowspan="${nY}">
+  <div class="daerah-wrap"><select class="daerah-sel" onchange="onNama(${ri},this.value)">${getDaerahOpts(r.nama)}</select></div>
+  <button class="add-yr-btn" onclick="addYear(${ri})">＋ Tahun</button>
+</td>`;
+      }
+
+      h+=`<td class="c-yr" style="background:${col}12">
+  <span class="yr-badge" style="background:${col}">${y.yr}</span>
+  ${y.yr>2026?`<button class="yr-del" onclick="delYear(${ri},${yi})">✕ hapus</button>`:''}
+</td>
+<td class="c-val" style="background:${col}08">
+  <span class="f-lbl">${lbl}</span>
+  <input class="inp inp-r" value="${fmtI(y.val)}" placeholder="0" onchange="onYrVal(${ri},${yi},this.value)">
+</td>
+<td class="c-ruas" style="background:${col}06">
+  <span class="f-lbl">${y.yr>=2026?'Rencana Ruas':'Nama Ruas'}</span>
+  <textarea class="ta ta-ruas" placeholder="Nama ruas jalan…" onchange="onYrRuas(${ri},${yi},this.value)">${(y.ruas||'').replace(/</g,'&lt;')}</textarea>
+</td>`;
+
+      if(yi===0){
+        h+=`<td class="c-sts" rowspan="${nY}">
+  <div class="sts-inner">
+    <div>
+      <label class="tog-wrap" title="Murni: hanya Alokasi 2026">
+        <input type="checkbox" class="ti" ${M?'checked':''} onchange="onMurni(${ri},this.checked)">
+        <div class="tog"></div>
+      </label>
+      <span id="badge${ri}" class="${M?'badge-m':'badge-g'}">${M?'Murni 2026':'Gabungan'}</span>
+    </div>
+    <div class="div-line"></div>
+    <div>
+      <span class="f-lbl">Total Alokasi</span>
+      <div class="tot-val" id="tot${ri}">${fmt(tot)}</div>
+    </div>
+    <div>
+      <span class="f-lbl">% Jalan</span>
+      <div class="pct-row">
+        <input class="inp inp-pct" type="number" min="0" max="100" step=".01" value="${r.g||''}" placeholder="0" onchange="onPct(${ri},this.value)">
+        <span style="font-size:.7rem;color:var(--gr5)">%</span>
+      </div>
+    </div>
+    <div>
+      <span class="f-lbl">Alokasi Jalan</span>
+      <div class="jln-val" id="jln${ri}">${fmt(jln)}</div>
+    </div>
+  </div>
+</td>
+<td class="c-cat" rowspan="${nY}">
+  <span class="f-lbl">Catatan PFID</span>
+  <textarea class="ta ta-cat" placeholder="Catatan PFID…" onchange="onCat(${ri},this.value)">${(r.cat||'').replace(/</g,'&lt;')}</textarea>
+  <span class="f-lbl" style="margin-top:6px">Tgl Bahas Ruas</span>
+  <input class="inp" type="date" value="${r.tglRuas||''}" onchange="onField(${ri},'tglRuas',this.value)">
+</td>
+<td class="c-rkp" rowspan="${nY}">
+  <span class="f-lbl">Catatan RKP</span>
+  <textarea class="ta ta-cat" placeholder="Catatan RKP…" onchange="onField(${ri},'catRkp',this.value)">${(r.catRkp||'').replace(/</g,'&lt;')}</textarea>
+  <span class="f-lbl" style="margin-top:6px">Tgl Bahas RKP</span>
+  <input class="inp" type="date" value="${r.tglRkp||''}" onchange="onField(${ri},'tglRkp',this.value)">
+</td>
+<td class="c-dok" rowspan="${nY}">
+  <div class="dok-list">${DOK_LABELS.map((lb,di)=>`<div class="dok-i"><input type="checkbox" id="dk${ri}_${di}" ${r.dok[di]?'checked':''} onchange="onDok(${ri},${di},this.checked)"><label for="dk${ri}_${di}">${lb}</label></div>`).join('')}</div>
+</td>`;
+      }
+
+      tr.innerHTML=h;
+      tb.appendChild(tr);
+    });
+  });
+
+  // Total row
+  const totTr=document.createElement('tr'); totTr.className='tr-tot';
+  const gTot=state.reduce((s,r)=>s+calcTotal(r),0);
+  const gJln=state.reduce((s,r)=>s+calcJalan(r),0);
+  totTr.innerHTML=`<td colspan="2">TOTAL (${state.length} daerah)</td>
+<td colspan="3"></td>
+<td>Total: ${fmt(gTot)}<br>Jalan: ${fmt(gJln)}</td>
+<td colspan="3"></td>`;
+  tb.appendChild(totTr);
+}
+
+// ── HANDLERS ──────────────────────────────────────────────────────────────────
+function onNama(ri,v){state[ri].nama=v;}
+function onYrVal(ri,yi,v){state[ri].years[yi].val=parseRp(v);recalc(ri);}
+function onYrRuas(ri,yi,v){state[ri].years[yi].ruas=v;}
+function onPct(ri,v){state[ri].g=parseFloat(v)||0;recalc(ri);}
+function onField(ri,k,v){state[ri][k]=v;}
+function onCat(ri,v){state[ri].cat=v;}
+function onDok(ri,di,v){state[ri].dok[di]=v?1:0;updateCards();}
+function onMurni(ri,v){
+  state[ri].murni=v;
+  const b=document.getElementById('badge'+ri);
+  if(b){b.className=v?'badge-m':'badge-g';b.textContent=v?'Murni 2026':'Gabungan';}
+  recalc(ri);
+}
+function recalc(ri){
+  const r=state[ri],f=calcTotal(r),h=calcJalan(r);
+  const te=document.getElementById('tot'+ri),je=document.getElementById('jln'+ri);
+  if(te)te.textContent=fmt(f);
+  if(je)je.textContent=fmt(h);
+  updateCards();
+}
+
+// ── ADD / DELETE ───────────────────────────────────────────────────────────────
+function addRow(){
+  state.push({no:state.length+1,nama:DAERAH_SUMUT[0],g:80,murni:false,cat:'',tglRuas:'',catRkp:'',tglRkp:'',dok:[0,0,0,0,0],
+    years:[{yr:2023,val:0,ruas:''},{yr:2024,val:0,ruas:''},{yr:2025,val:0,ruas:''},{yr:2026,val:0,ruas:''}]});
+  renderTable();updateCards();
+  document.getElementById('tblBody').lastElementChild?.previousElementSibling?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function delRow(ri){if(!confirm('Hapus '+state[ri].nama+'?'))return;state.splice(ri,1);state.forEach((r,i)=>r.no=i+1);renderTable();updateCards();}
+function addYear(ri){
+  const r=state[ri];
+  const maxYr=Math.max(...r.years.map(y=>y.yr));
+  r.years.push({yr:maxYr+1,val:0,ruas:''});
+  renderTable();updateCards();
+}
+function delYear(ri,yi){
+  if(state[ri].years.length<=1){toast('⚠️ Minimal 1 tahun');return;}
+  if(!confirm('Hapus tahun '+state[ri].years[yi].yr+'?'))return;
+  state[ri].years.splice(yi,1);
+  renderTable();updateCards();
+}
+
+// ── IMPORT EXCEL ──────────────────────────────────────────────────────────────
+function importExcel(inp){
+  const file=inp.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      let start=0;
+      for(let i=0;i<rows.length;i++){if(typeof rows[i][0]==='number'&&rows[i][0]>0){start=i;break;}}
+      const ns=[];
+      for(let i=start;i<rows.length;i++){
+        const r=rows[i];if(!r[2])continue;
+        const d=parseRp(r[3]),s24=parseRp(r[4]),s25=parseRp(r[5]);
+        const total=parseRp(r[6]);
+        const murni=total>0&&Math.abs(total-d)<1000;
+        ns.push({
+          no:+r[0]||ns.length+1,
+          nama:String(r[2]||'').trim(),
+          g:parseFloat(r[7])||0,murni,
+          cat:String(r[14]||'').replace(/\r\n/g,'\n'),
+          tglRuas:excelToDate(r[15]),
+          catRkp:String(r[16]||'').replace(/\r\n/g,'\n'),
+          tglRkp:excelToDate(r[17]),
+          dok:[r[18]?1:0,r[19]?1:0,r[20]?1:0,r[21]?1:0,r[22]?1:0],
+          years:[
+            {yr:2023,val:0,ruas:String(r[9]||'').replace(/\r\n/g,'\n')},
+            {yr:2024,val:s24,ruas:String(r[10]||'').replace(/\r\n/g,'\n')},
+            {yr:2025,val:s25,ruas:String(r[11]||'').replace(/\r\n/g,'\n')},
+            {yr:2026,val:d,ruas:String(r[12]||'').replace(/\r\n/g,'\n')},
+          ]
+        });
+      }
+      if(!ns.length){toast('⚠️ Tidak ada data');return;}
+      state=ns;renderTable();updateCards();
+      toast('✅ Import '+state.length+' daerah');
+    }catch(err){toast('❌ '+err.message);}
+    inp.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── EXPORT EXCEL ──────────────────────────────────────────────────────────────
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const hdr=['NO','NAMA DAERAH','ALOKASI DBH TA 2026 (Rp)','SILPA s.d 2024 (Rp)','SILPA 2025 (Rp)',
+    'TOTAL ALOKASI (Rp)','% JALAN','ALOKASI JALAN (Rp)',
+    'RUAS 2023','RUAS 2024','RUAS 2025','RENCANA RUAS 2026',
+    'CATATAN PFID','TGL BAHAS RUAS','CATATAN RKP','TGL BAHAS RKP',
+    'BA Porsi','BA Ruas','BA Balai','DED+RAB','Dokumentasi'];
+  const rows=[
+    ['','CATATAN PEMBAHASAN BERITA ACARA DBH SAWIT TA 2026 SEKTOR INFRASTRUKTUR PROVINSI SUMATERA UTARA'],
+    hdr,
+    ...state.map((r,i)=>{
+      const y26=getY26(r);
+      const y24=r.years.find(y=>y.yr===2024)||{val:0,ruas:''};
+      const y25=r.years.find(y=>y.yr===2025)||{val:0,ruas:''};
+      const y23=r.years.find(y=>y.yr===2023)||{val:0,ruas:''};
+      return[r.no||i+1,r.nama,y26.val,y24.val,y25.val,
+        calcTotal(r),r.g,calcJalan(r),
+        y23.ruas,y24.ruas,y25.ruas,y26.ruas,
+        r.cat,r.tglRuas?dateToExcel(r.tglRuas):'',
+        r.catRkp,r.tglRkp?dateToExcel(r.tglRkp):'',
+        r.dok[0]?true:'',r.dok[1]?true:'',r.dok[2]?true:'',r.dok[3]?true:'',r.dok[4]?true:''];
+    })
+  ];
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:5},{wch:32},{wch:22},{wch:20},{wch:16},{wch:22},{wch:9},{wch:22},{wch:42},{wch:42},{wch:42},{wch:42},{wch:52},{wch:16},{wch:52},{wch:16},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,'SUMUT-DBH 2026',ws);
+  XLSX.writeFile(wb,'DBH_Sawit_2026_SUMUT.xlsx');
+  toast('✅ Excel diunduh');
+}
+
+// ── PROVINCE DROPDOWN ─────────────────────────────────────────────────────────
+function buildProvDropdown(){
+  const sel=document.getElementById('provSel');
+  PROVINCES.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p;o.textContent=p+(p!=='Sumatera Utara'?' (belum tersedia)':'');
+    if(p==='Sumatera Utara')o.selected=true;
+    sel.appendChild(o);
+  });
+  sel.addEventListener('change',e=>{if(e.target.value!=='Sumatera Utara'){toast('⚠️ Data provinsi ini belum tersedia');e.target.value='Sumatera Utara';}});
+}
+
+// ── PARTICLES ─────────────────────────────────────────────────────────────────
+function spawnParticles(){
+  const b=document.getElementById('ptc');
+  ['Rp','💰','🛣️','📊','🏛️'].forEach(s=>{for(let j=0;j<3;j++){
+    const el=document.createElement('div');el.className='ptc-i';el.textContent=s;
+    el.style.cssText=`left:${Math.random()*100}vw;animation-duration:${20+Math.random()*22}s;animation-delay:${Math.random()*18}s`;
+    b.appendChild(el);
+  }});
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  spawnParticles();buildProvDropdown();loadState();
+  setTimeout(()=>{document.getElementById('loader').classList.add('out');setTimeout(()=>{renderTable();updateCards();},200);},1700);
+});
+</script>
+</body>
+</html>
